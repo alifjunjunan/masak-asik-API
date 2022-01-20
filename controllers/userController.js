@@ -53,5 +53,38 @@ module.exports = {
                 })
             }
         })
+    },
+    keepLogin: (req,res) => {
+
+        let {iduser} = req.body;
+        let sql = `SELECT * FROM users WHERE iduser=${db.escape(iduser)};`;
+
+        db.query(sql,(err,result) => {
+            if(err){
+                res.status(500).send({
+                    message: 'keep login failed',
+                    success: false,
+                    error: err
+                })
+            }
+
+            console.log(sql)
+
+            if (result.length > 0){
+                res.status(200).send({
+                    message: 'keep login success',
+                    success: true,
+                    dataLogin: result[0],
+                    error: ''
+                })
+            }else {
+                res.status(401).send({
+                    message: "keep login failed",
+                    success: false,
+                    dataLogin: {},
+                    error: ""
+                })
+            }
+        })
     }
 }
