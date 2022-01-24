@@ -4,10 +4,12 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config()
 
+const bearerToken = require('express-bearer-token')
 const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
+app.use(bearerToken());
 
 //db check connection
 const {db} = require('./config/database');
@@ -26,9 +28,11 @@ app.get('/', (req,res) => {
     
 })
 
-const {userRoute} = require('./routes')
+const {userRoute,resepRoute, kategoriRoute} = require('./routes')
 
 app.use('/users',userRoute);
+app.use('/resep',resepRoute);
+app.use('/kategori',kategoriRoute);
 
 app.listen(PORT,()=> {
     console.log('masak-asik api running : ',PORT);

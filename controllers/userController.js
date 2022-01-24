@@ -1,11 +1,12 @@
 const { db } = require('../config/database');
 const Crypto = require('crypto');
+const {hashPassword, createToken} = require('../config/enkripsi')
 
 module.exports = {
     register: (req, res) => {
         let {email,username,password} = req.body;
-        let hashPassword = Crypto.createHmac('sha256', 'masak-asik').update(password).digest('hex');
-        let sql = `INSERT INTO users VALUES (null,${db.escape(email)},${db.escape(username)},${db.escape(hashPassword)},'user','active');`;
+        
+        let sql = `INSERT INTO users VALUES (null,${db.escape(email)},${db.escape(username)},${db.escape(hashPassword(password))},'user','active');`;
 
         db.query(sql, (err, result) => {
             if(err) {
@@ -25,8 +26,7 @@ module.exports = {
     },
     login: (req,res) => {
         let {email,password} = req.body;
-        let hashPassword = Crypto.createHmac('sha256','masak-asik').update(password).digest('hex');
-        let sql = `SELECT * FROM users WHERE email=${db.escape(email)} AND password=${db.escape(hashPassword)};`
+        let sql = `SELECT * FROM users WHERE email=${db.escape(email)} AND password=${db.escape(hashPassword(password))};`
         
         db.query(sql,(err,result) => {
             if(err) {
@@ -38,10 +38,12 @@ module.exports = {
             }
 
             if(result.length > 0) {
+                let {iduser,email,username,role,status} = result[0]
+                let token = createToken({iduser,email,username,role,status})
                 res.status(200).send({
                     message: 'login success',
                     success: true,
-                    dataLogin: result[0],
+                    dataLogin: {email,username,role,status, token},
                     error:''
                 })
             }else {
@@ -56,8 +58,8 @@ module.exports = {
     },
     keepLogin: (req,res) => {
 
-        let {iduser} = req.body;
-        let sql = `SELECT * FROM users WHERE iduser=${db.escape(iduser)};`;
+        
+        let sql = `SELECT * FROM users WHERE iduser=${db.escape(req.dataUser.iduser)};`;
 
         db.query(sql,(err,result) => {
             if(err){
@@ -67,14 +69,14 @@ module.exports = {
                     error: err
                 })
             }
-
-            console.log(sql)
-
+            
             if (result.length > 0){
+                let {iduser,email,username,role,status} = result[0];
+                let token = createToken({iduser,email,username,role,status});
                 res.status(200).send({
                     message: 'keep login success',
                     success: true,
-                    dataLogin: result[0],
+                    dataLogin: {email,username,role,status,token},
                     error: ''
                 })
             }else {
